@@ -33,7 +33,7 @@ class GenericWebArenaTask(AbstractBrowserTask):
         # task properties, will be used to set up the browsergym environment
         self.viewport = {"width": 1280, "height": 720}
         self.slow_mo = 1000  # ms
-        self.timeout = 10000  # ms
+        self.timeout = 100000  # ms
 
         self.webarena_instance = WebArenaInstance()
         self.config_file: str = None

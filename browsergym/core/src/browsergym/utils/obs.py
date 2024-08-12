@@ -188,7 +188,7 @@ def _remove_redundant_static_text(ax_tree: str) -> str:
     for line in lines:
         if line.strip().startswith("StaticText"):
             content = line.split("StaticText")[1].strip().strip("'")
-            if content in "\n".join(new_lines[-3:]):
+            if f"StaticText '{content}'" in "\n".join(new_lines[-3:]):
                 continue
         new_lines.append(line)
     return "\n".join(new_lines)
