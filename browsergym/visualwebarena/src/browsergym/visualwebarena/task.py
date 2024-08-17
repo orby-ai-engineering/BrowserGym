@@ -32,7 +32,7 @@ def blip2_captioning(all_pixel_values, prompts):
         return requests.post(
             "http://ec2-52-15-137-15.us-east-2.compute.amazonaws.com:8000/blip2_deployment", json={
                 "prompt": prompt,
-                "image": img_to_base64(Image.fromarray(pixel_values))
+                "image": img_to_base64(pixel_values)
             }
         ).text
 
