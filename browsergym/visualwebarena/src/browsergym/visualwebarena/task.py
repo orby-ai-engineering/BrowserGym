@@ -1,6 +1,9 @@
+import base64
 import json
 import logging
+import io
 import playwright.sync_api
+from PIL import Image
 import importlib.resources
 import tempfile
 import requests
@@ -12,6 +15,27 @@ from browsergym.core.task import AbstractBrowserTask
 from .instance import VisualWebArenaInstance
 
 logger = logging.getLogger(__name__)
+
+
+def img_to_base64(img):
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+
+def blip2_captioning(all_pixel_values, prompts):
+    """
+    Given a list of all pixel values and a list of prompts, return a list of captions.
+    """
+
+    def _caption_one(pixel_values, prompt):
+        return requests.post(
+            "http://ec2-52-15-137-15.us-east-2.compute.amazonaws.com:8000/blip2_deployment", json={
+                "prompt": prompt
+                "image": img_to_base64(Image.fromarray(pixel_values))}
+        ).text
+
+    return [_caption_one(pixel_values, prompt) for pixel_values, prompt in zip(all_pixel_values, prompts)]
 
 
 class GenericVisualWebArenaTask(AbstractBrowserTask):
@@ -96,7 +120,7 @@ class GenericVisualWebArenaTask(AbstractBrowserTask):
             self.config_file = f.name
 
         # build the evaluator
-        self.evaluator = evaluator_router(self.config_file)
+        self.evaluator = evaluator_router(self.config_file, captioning_fn=blip2_captioning)
 
         # reset instance if needed (classifieds domain only)
         if self.config.get("require_reset", False):
