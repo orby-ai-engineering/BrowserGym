@@ -31,8 +31,9 @@ def blip2_captioning(all_pixel_values, prompts):
     def _caption_one(pixel_values, prompt):
         return requests.post(
             "http://ec2-52-15-137-15.us-east-2.compute.amazonaws.com:8000/blip2_deployment", json={
-                "prompt": prompt
-                "image": img_to_base64(Image.fromarray(pixel_values))}
+                "prompt": prompt,
+                "image": img_to_base64(Image.fromarray(pixel_values))
+            }
         ).text
 
     return [_caption_one(pixel_values, prompt) for pixel_values, prompt in zip(all_pixel_values, prompts)]
