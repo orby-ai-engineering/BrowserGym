@@ -63,6 +63,10 @@ class GenericVisualWebArenaTask(AbstractBrowserTask):
         # load all task configs to JSON
         all_configs = json.loads(all_configs_str)
 
+        # relabel IDs
+        for i in range(len(all_configs)):
+            all_configs[i]['task_id'] = i
+
         # keep only the desired task configs
         if intent_template_id is not None:
             task_configs = [
@@ -77,7 +81,7 @@ class GenericVisualWebArenaTask(AbstractBrowserTask):
             task_configs = [conf for conf in all_configs if conf["task_id"] == task_id]
             if not task_configs:
                 raise ValueError(
-                    f"Could not find any task config with task_id={intent_template_id}."
+                    f"Could not find any task config with task_id={task_id}."
                 )
 
         self.task_configs = task_configs
