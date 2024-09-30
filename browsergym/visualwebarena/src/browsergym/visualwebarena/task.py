@@ -1,9 +1,13 @@
+import base64
+import io
 import json
 import logging
 import playwright.sync_api
+from PIL import Image
 import importlib.resources
 import tempfile
 import requests
+from typing import List
 
 from typing import Optional, Tuple
 
@@ -12,6 +16,37 @@ from browsergym.core.task import AbstractBrowserTask
 from .instance import VisualWebArenaInstance
 
 logger = logging.getLogger(__name__)
+
+def img_to_base64(img):
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+
+# adapted from https://github.com/web-arena-x/visualwebarena/blob/15890922c97a8694e366fde2d7de8dbd1ff63fb5/evaluation_harness/image_utils.py#L12
+def blip2_captioning_fn(images: List[Image.Image],
+        prompts: List[str] = None):
+
+    def _caption_one(image, prompt):
+        return requests.post(  "http://ec2-52-15-137-15.us-east-2.compute.amazonaws.com:8000/blip2_deployment", json={
+            "prompt": prompt,
+            "image": img_to_base64(image)}
+        ).text
+
+
+    if prompts is None:
+        # Perform VQA
+        captions = [_caption_one(image, "") for image in images]
+    else:
+        # Regular captioning. Prompt is a list of strings, one for each image
+        assert len(images) == len(
+            prompts
+        ), "Number of images and prompts must match, got {} and {}".format(
+            len(images), len(prompts)
+        )
+        captions = [_caption_one(image, prompt) for image, prompt in zip(images, prompts)]
+
+    return captions
 
 
 class GenericVisualWebArenaTask(AbstractBrowserTask):
@@ -32,7 +67,7 @@ class GenericVisualWebArenaTask(AbstractBrowserTask):
         # task properties, will be used to set up the browsergym environment
         self.viewport = {"width": 1280, "height": 720}
         self.slow_mo = 1000  # ms
-        self.timeout = 10000  # ms
+        self.timeout = 100000  # ms
 
         self.webarena_instance = VisualWebArenaInstance()
         self.config_file: str = None
