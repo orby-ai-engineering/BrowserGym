@@ -135,7 +135,7 @@ class GenericVisualWebArenaTask(AbstractBrowserTask):
             self.config_file = f.name
 
         # build the evaluator
-        self.evaluator = evaluator_router(self.config_file)
+        self.evaluator = evaluator_router(self.config_file, captioning_fn=blip2_captioning_fn)
 
         # reset instance if needed (classifieds domain only)
         if self.config.get("require_reset", False):
